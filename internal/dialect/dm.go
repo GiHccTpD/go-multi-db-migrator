@@ -1,0 +1,72 @@
+package dialect
+
+import (
+	"context"
+	"database/sql"
+	"fmt"
+	"time"
+
+	"github.com/GiHccTpD/go-multi-db-migrator/internal/migcore"
+
+	_ "github.com/ganl/go-dm"
+)
+
+type DMDriver struct{}
+
+func (d DMDriver) Name() string                 { return "dm" }
+func (d DMDriver) NormalizeDialectName() string { return "dm" }
+
+func (d DMDriver) Open(dsn string) (*sql.DB, error) {
+	// TODO: driverName 按实际驱动修改
+	return sql.Open("dm", dsn)
+}
+
+func (d DMDriver) EnsureVersionTable(ctx context.Context, db *sql.DB) error {
+	sqlText := `
+CREATE TABLE IF NOT EXISTS schema_migrations (
+    version      VARCHAR(64) PRIMARY KEY,
+    name         VARCHAR(255) NOT NULL,
+    checksum     VARCHAR(128) NOT NULL,
+    applied_at   TIMESTAMP NOT NULL,
+    success      INTEGER NOT NULL,
+    execution_ms BIGINT NOT NULL
+)`
+	_, err := db.ExecContext(ctx, sqlText)
+	return err
+}
+
+func (d DMDriver) GetAppliedMigrations(ctx context.Context, db *sql.DB) (map[string]string, error) {
+	rows, err := db.QueryContext(ctx, `SELECT version, checksum FROM schema_migrations WHERE success = 1`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	out := make(map[string]string)
+	for rows.Next() {
+		var version, checksum string
+		if err := rows.Scan(&version, &checksum); err != nil {
+			return nil, err
+		}
+		out[version] = checksum
+	}
+	return out, rows.Err()
+}
+
+func (d DMDriver) ApplyMigration(ctx context.Context, db *sql.DB, m migcore.Migration, logSQL bool) error {
+	start := time.Now()
+
+	if _, err := db.ExecContext(ctx, m.SQL); err != nil {
+		return fmt.Errorf("exec migration %s failed: %w", m.FileName, err)
+	}
+
+	_, err := db.ExecContext(ctx, `
+INSERT INTO schema_migrations(version, name, checksum, applied_at, success, execution_ms)
+VALUES (?, ?, ?, ?, ?, ?)
+`, m.Version, m.Name, m.Checksum, time.Now(), 1, time.Since(start).Milliseconds())
+	if err != nil {
+		return fmt.Errorf("insert migration record failed: %w", err)
+	}
+
+	return nil
+}
