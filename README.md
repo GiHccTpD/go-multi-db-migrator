@@ -253,6 +253,34 @@ db-migrator:dm:im_meta
 
 ---
 
+# ✅ Makefile 使用
+
+编译：
+
+```bash
+make build
+```
+
+构建镜像：
+
+```bash
+make docker
+```
+
+本地跑 PostgreSQL：
+
+```bash
+make run-postgres
+```
+
+生成 migration：
+
+```bash
+make mk-migration db=test name=init_base_schema
+```
+
+---
+
 ## 锁实现方式（统一三库）
 
 👉 使用 **锁表**
@@ -436,9 +464,3 @@ im_meta
 * DDL 审计
 * 自动 CI 执行
 * 多环境管理（dev / test / prod）
-
----
-
-# ✅ 总结一句话
-
-👉 **按数据库实例管理 migration + 使用锁表实现分布式锁 + 独立 Job 执行，是最稳的生产方案**

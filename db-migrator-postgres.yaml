@@ -1,0 +1,54 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: db-migrator-test-secret
+  namespace: default
+type: Opaque
+stringData:
+  DB_DSN: postgres://postgres:postgres@postgres.default.svc.cluster.local:5432/test?sslmode=disable
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-migrator-test-postgres
+  namespace: default
+spec:
+  backoffLimit: 1
+  ttlSecondsAfterFinished: 3600
+  template:
+    metadata:
+      labels:
+        app: db-migrator
+        db-instance: test
+        db-dialect: postgres
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: migrator
+          image: your-registry/go-multi-db-migrator:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: DB_DIALECT
+              value: postgres
+            - name: DB_INSTANCE_NAME
+              value: test
+            - name: MIGRATIONS_DIR
+              value: /app/migrations
+            - name: LOG_SQL
+              value: "false"
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: DB_DSN
+              valueFrom:
+                secretKeyRef:
+                  name: db-migrator-test-secret
+                  key: DB_DSN
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
