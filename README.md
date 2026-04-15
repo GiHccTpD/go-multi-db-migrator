@@ -1,4 +1,4 @@
-# go-multi-db-migrations
+# go-multi-db-migrator
 
 支持多数据库迁移
 
