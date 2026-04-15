@@ -13,7 +13,9 @@ import (
 
 type MySQLDriver struct{}
 
-func (d MySQLDriver) Name() string { return "mysql" }
+var _ Driver = (*MySQLDriver)(nil)
+
+func (d MySQLDriver) Name() string                 { return "mysql" }
 func (d MySQLDriver) NormalizeDialectName() string { return "mysql" }
 
 func (d MySQLDriver) Open(dsn string) (*sql.DB, error) {
@@ -67,4 +69,23 @@ VALUES (?, ?, ?, ?, ?, ?)
 	}
 
 	return nil
+}
+
+func (d MySQLDriver) AcquireLock(ctx context.Context, db *sql.DB, lockKey string) (func() error, error) {
+	var got sql.NullInt64
+	if err := db.QueryRowContext(ctx, `SELECT GET_LOCK(?, 0)`, lockKey).Scan(&got); err != nil {
+		return nil, fmt.Errorf("acquire mysql lock failed: %w", err)
+	}
+	if !got.Valid || got.Int64 != 1 {
+		return nil, fmt.Errorf("mysql lock is already held: %s", lockKey)
+	}
+
+	unlock := func() error {
+		var released sql.NullInt64
+		if err := db.QueryRowContext(context.Background(), `SELECT RELEASE_LOCK(?)`, lockKey).Scan(&released); err != nil {
+			return fmt.Errorf("release mysql lock failed: %w", err)
+		}
+		return nil
+	}
+	return unlock, nil
 }

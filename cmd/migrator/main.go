@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/GiHccTpD/go-multi-db-migrator/internal/config"
@@ -33,11 +34,13 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
 	defer cancel()
 
+	rootDir := filepath.Join(cfg.MigrationsDir, cfg.DBInstanceName)
+
 	r := &migrator.Runner{
 		DB:      db,
 		Driver:  driver,
 		LogSQL:  cfg.LogSQL,
-		RootDir: cfg.MigrationsDir,
+		RootDir: rootDir,
 		Dialect: normalizeDialect(cfg.Dialect),
 	}
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"hash/fnv"
 	"time"
 
 	"github.com/GiHccTpD/go-multi-db-migrator/internal/migcore"
@@ -13,7 +14,9 @@ import (
 
 type PostgresDriver struct{}
 
-func (d PostgresDriver) Name() string { return "postgres" }
+var _ Driver = (*PostgresDriver)(nil)
+
+func (d PostgresDriver) Name() string                 { return "postgres" }
 func (d PostgresDriver) NormalizeDialectName() string { return "postgres" }
 
 func (d PostgresDriver) Open(dsn string) (*sql.DB, error) {
@@ -73,4 +76,36 @@ VALUES ($1, $2, $3, $4, $5, $6)
 	}
 
 	return tx.Commit()
+}
+
+func (d PostgresDriver) AcquireLock(ctx context.Context, db *sql.DB, lockKey string) (func() error, error) {
+	lockID := hashToInt64(lockKey)
+
+	var ok bool
+	if err := db.QueryRowContext(ctx, `SELECT pg_try_advisory_lock($1)`, lockID).Scan(&ok); err != nil {
+		return nil, fmt.Errorf("acquire postgres advisory lock failed: %w", err)
+	}
+	if !ok {
+		return nil, fmt.Errorf("postgres advisory lock is already held: %s", lockKey)
+	}
+
+	unlock := func() error {
+		var released bool
+		err := db.QueryRowContext(context.Background(), `SELECT pg_advisory_unlock($1)`, lockID).Scan(&released)
+		if err != nil {
+			return fmt.Errorf("release postgres advisory lock failed: %w", err)
+		}
+		if !released {
+			return fmt.Errorf("postgres advisory lock was not released: %s", lockKey)
+		}
+		return nil
+	}
+
+	return unlock, nil
+}
+
+func hashToInt64(s string) int64 {
+	h := fnv.New64a()
+	_, _ = h.Write([]byte(s))
+	return int64(h.Sum64())
 }

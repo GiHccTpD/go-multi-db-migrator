@@ -11,14 +11,27 @@ import (
 )
 
 type Runner struct {
-	DB      *sql.DB
-	Driver  migcore.Driver
-	LogSQL  bool
-	RootDir string
-	Dialect string
+	DB             *sql.DB
+	Driver         migcore.Driver
+	LogSQL         bool
+	RootDir        string
+	Dialect        string
+	DBInstanceName string
 }
 
 func (r *Runner) Run(ctx context.Context) error {
+	lockKey := fmt.Sprintf("db-migrator:%s:%s", r.Dialect, r.DBInstanceName)
+
+	unlock, err := r.Driver.AcquireLock(ctx, r.DB, lockKey)
+	if err != nil {
+		return fmt.Errorf("acquire migration lock failed: %w", err)
+	}
+	defer func() {
+		if err := unlock(); err != nil {
+			log.Printf("release migration lock failed: %v", err)
+		}
+	}()
+
 	if err := r.Driver.EnsureVersionTable(ctx, r.DB); err != nil {
 		return fmt.Errorf("ensure version table failed: %w", err)
 	}
@@ -34,7 +47,7 @@ func (r *Runner) Run(ctx context.Context) error {
 	}
 
 	if len(migrations) == 0 {
-		log.Printf("no migrations found for dialect=%s", r.Dialect)
+		log.Printf("no migrations found for db_instance=%s dialect=%s", r.DBInstanceName, r.Dialect)
 		return nil
 	}
 
