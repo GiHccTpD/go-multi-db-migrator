@@ -13,8 +13,8 @@ docker:
 
 run-postgres:
 	DB_DIALECT=postgres \
-	DB_DSN='postgres://onyx:12345678@127.0.0.1:5432/migrate_test?sslmode=disable' \
-	DB_INSTANCE_NAME=migrate_test \
+	DB_DSN='postgres://onyx:12345678@127.0.0.1:5432/test?sslmode=disable' \
+	DB_INSTANCE_NAME=test \
 	MIGRATIONS_DIR=$(MIGRATIONS_DIR) \
 	go run ./cmd/migrator
 

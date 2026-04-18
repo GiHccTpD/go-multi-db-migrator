@@ -81,6 +81,20 @@ go run ./cmd/migrator
 | `MIGRATION_TARGET_VERSION` | 空 | 目标版本。`up` 时可选，`down` 时必填 |
 | `LOG_SQL` | `false` | 是否打印 SQL |
 
+## 首次接入已有数据库
+
+migrator 每次运行都会先自动创建 `schema_migrations`，再读取已应用版本。
+
+如果目标数据库是空库，`schema_migrations` 中没有记录，工具会从 `000001` 开始按顺序执行所有 `.up.sql`。
+
+如果目标数据库已经有表结构，但以前没有使用过本工具，工具不会自动认领历史变更。即使 `migrations/` 目录里已经放了历史 SQL 文件，只要 `schema_migrations` 没有对应记录，工具仍会把这些版本当作未执行并尝试执行。
+
+已有库接入建议：
+
+- 安全做法：新建一个空的 `000001_baseline.up.sql` 作为基线，从接入后的新变更开始写 `000002_*.up.sql`。
+- 如果必须重放历史 SQL，先保证历史 migration 是幂等的，例如 `CREATE TABLE IF NOT EXISTS`，并在测试库验证。
+- 不要手工伪造 `schema_migrations` 记录，除非已经确认 checksum 与本地 `.up.sql` 完全一致。
+
 ## 灰度 migration
 
 灰度发布时，先让 migration 向前兼容业务旧版本，再用目标版本分批推进：
