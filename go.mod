@@ -3,7 +3,7 @@ module github.com/GiHccTpD/go-multi-db-migrator
 go 1.25.0
 
 require (
-	github.com/ganl/go-dm v1.2.193
+	github.com/GihcctpD/dm v1.8.25
 	github.com/go-sql-driver/mysql v1.9.3
 	github.com/jackc/pgx/v5 v5.9.1
 )

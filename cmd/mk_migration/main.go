@@ -1,54 +1,75 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"regexp"
 	"sort"
 	"strconv"
-)
-
-var (
-	name = flag.String("name", "", "migration name, e.g. bootstrap_migration")
-	all  = flag.Bool("all", false, "create files for mysql/postgres/dm")
+	"strings"
 )
 
 func main() {
-	flag.Parse()
-
-	if *name == "" {
-		fmt.Println("usage: go run ./cmd/mk_migration --name bootstrap_migration --all")
+	if err := run(os.Args[1:], os.Stdout); err != nil {
+		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
+	}
+}
+
+func run(args []string, stdout io.Writer) error {
+	fs := flag.NewFlagSet("mk_migration", flag.ContinueOnError)
+	fs.SetOutput(stdout)
+
+	name := fs.String("name", "", "migration name, e.g. bootstrap_migration")
+	dbInstance := fs.String("db-instance", "", "database instance name, e.g. test")
+	all := fs.Bool("all", false, "create files for mysql/postgres/dm")
+
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
+
+	migrationName := strings.TrimSpace(*name)
+	if migrationName == "" {
+		return errors.New("usage: go run ./cmd/mk_migration --db-instance test --name bootstrap_migration --all")
+	}
+	instanceName := strings.TrimSpace(*dbInstance)
+	if instanceName == "" {
+		return errors.New("--db-instance is required")
+	}
+	if !*all {
+		return errors.New("--all is required in this version")
 	}
 
 	dialects := []string{"mysql", "postgres", "dm"}
-	if !*all {
-		fmt.Println("--all is required in this version")
-		os.Exit(1)
-	}
-
-	next, err := nextVersion("migrations/postgres")
+	next, err := nextVersion(filepath.Join("migrations", instanceName, "postgres"))
 	if err != nil {
-		fmt.Printf("get next version failed: %v\n", err)
-		os.Exit(1)
+		return fmt.Errorf("get next version failed: %w", err)
 	}
 
 	for _, d := range dialects {
-		dir := filepath.Join("migrations", d)
+		dir := filepath.Join("migrations", instanceName, d)
 		if err := os.MkdirAll(dir, 0o755); err != nil {
-			panic(err)
+			return err
 		}
 
-		up := filepath.Join(dir, fmt.Sprintf("%s_%s.up.sql", next, *name))
-		down := filepath.Join(dir, fmt.Sprintf("%s_%s.down.sql", next, *name))
+		up := filepath.Join(dir, fmt.Sprintf("%s_%s.up.sql", next, migrationName))
+		down := filepath.Join(dir, fmt.Sprintf("%s_%s.down.sql", next, migrationName))
 
-		mustWrite(up, "-- write your UP migration here\n")
-		mustWrite(down, "-- write your DOWN migration here\n")
-		fmt.Println("created:", up)
-		fmt.Println("created:", down)
+		if err := writeFile(up, "-- write your UP migration here\n"); err != nil {
+			return err
+		}
+		if err := writeFile(down, "-- write your DOWN migration here\n"); err != nil {
+			return err
+		}
+		fmt.Fprintln(stdout, "created:", up)
+		fmt.Fprintln(stdout, "created:", down)
 	}
+
+	return nil
 }
 
 func nextVersion(dir string) (string, error) {
@@ -79,8 +100,6 @@ func nextVersion(dir string) (string, error) {
 	return fmt.Sprintf("%06d", nums[len(nums)-1]+1), nil
 }
 
-func mustWrite(path, content string) {
-	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
-		panic(err)
-	}
+func writeFile(path, content string) error {
+	return os.WriteFile(path, []byte(content), 0o644)
 }

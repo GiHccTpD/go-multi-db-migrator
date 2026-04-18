@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/GiHccTpD/go-multi-db-migrator/internal/migcore"
-	_ "github.com/ganl/go-dm"
+	_ "github.com/GihcctpD/dm"
 )
 
 type DMDriver struct{}
