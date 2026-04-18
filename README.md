@@ -83,9 +83,11 @@ go run ./cmd/migrator
 
 ## 首次接入已有数据库
 
-migrator 每次运行都会先自动创建 `schema_migrations`，再读取已应用版本。
+migrator 每次运行都会先连接目标库并自动创建 `schema_migrations`，再补齐当前数据库类型的 migration 目录，最后读取已应用版本。
 
 如果目标数据库是空库，`schema_migrations` 中没有记录，工具会从 `000001` 开始按顺序执行所有 `.up.sql`。
+
+如果当前实例还没有对应数据库类型的 migration 目录，例如运行 PostgreSQL 时缺少 `migrations/test/postgres/`，工具会自动创建该目录；目录内没有 `.up.sql` 时，`up` 会按“无迁移可执行”处理。
 
 如果目标数据库已经有表结构，但以前没有使用过本工具，工具不会自动认领历史变更。即使 `migrations/` 目录里已经放了历史 SQL 文件，只要 `schema_migrations` 没有对应记录，工具仍会把这些版本当作未执行并尝试执行。
 

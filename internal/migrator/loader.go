@@ -23,6 +23,9 @@ func loadMigrationFiles(rootDir, dialect, direction string) ([]migcore.Migration
 
 	entries, err := os.ReadDir(dir)
 	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, nil
+		}
 		return nil, fmt.Errorf("read migrations dir failed: %w", err)
 	}
 

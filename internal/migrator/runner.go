@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
+	"path/filepath"
 	"sort"
 	"time"
 
@@ -44,6 +46,10 @@ func (r *Runner) Run(ctx context.Context) error {
 
 	if err := r.Driver.EnsureVersionTable(ctx, r.DB); err != nil {
 		return fmt.Errorf("ensure version table failed: %w", err)
+	}
+
+	if err := ensureDialectDir(r.RootDir, r.Dialect); err != nil {
+		return fmt.Errorf("ensure migrations dirs failed: %w", err)
 	}
 
 	applied, err := r.Driver.GetAppliedMigrations(ctx, r.DB)
@@ -188,4 +194,8 @@ func appliedVersionsAfter(applied map[string]string, targetVersion string) []str
 	}
 	sort.Sort(sort.Reverse(sort.StringSlice(versions)))
 	return versions
+}
+
+func ensureDialectDir(rootDir, dialect string) error {
+	return os.MkdirAll(filepath.Join(rootDir, dialect), 0o755)
 }

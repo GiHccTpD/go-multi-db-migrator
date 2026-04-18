@@ -13,10 +13,10 @@ func TestLoadMigrationsForLocalMakeTargets(t *testing.T) {
 		wantFile string
 	}{
 		{
-			name:     "postgres migrate_test",
-			rootDir:  filepath.Join("..", "..", "migrations", "migrate_test"),
+			name:     "postgres test has no migrations yet",
+			rootDir:  filepath.Join("..", "..", "migrations", "test"),
 			dialect:  "postgres",
-			wantFile: "000001_init_schema.up.sql",
+			wantFile: "",
 		},
 		{
 			name:     "mysql test",
@@ -38,6 +38,12 @@ func TestLoadMigrationsForLocalMakeTargets(t *testing.T) {
 			if err != nil {
 				t.Fatalf("LoadMigrations() error = %v", err)
 			}
+			if tt.wantFile == "" {
+				if len(migrations) != 0 {
+					t.Fatalf("LoadMigrations() returned %d migrations, want 0", len(migrations))
+				}
+				return
+			}
 			if len(migrations) != 1 {
 				t.Fatalf("LoadMigrations() returned %d migrations, want 1", len(migrations))
 			}
@@ -45,5 +51,17 @@ func TestLoadMigrationsForLocalMakeTargets(t *testing.T) {
 				t.Fatalf("LoadMigrations()[0].FileName = %q, want %q", migrations[0].FileName, tt.wantFile)
 			}
 		})
+	}
+}
+
+func TestLoadMigrationsReturnsEmptyWhenDialectDirectoryDoesNotExist(t *testing.T) {
+	rootDir := t.TempDir()
+
+	migrations, err := LoadMigrations(rootDir, "postgres")
+	if err != nil {
+		t.Fatalf("LoadMigrations() error = %v", err)
+	}
+	if len(migrations) != 0 {
+		t.Fatalf("LoadMigrations() returned %d migrations, want 0", len(migrations))
 	}
 }

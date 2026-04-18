@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="ALL" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="479d653e-9e51-477f-9644-90c217ce3534" name="Changes" comment="docs(migrator): 更新文档并修正数据库实例名称&#10;&#10;- 修正 Makefile 中的数据库实例名称从 migrate_test 到 test&#10;- 添加首次接入已有数据库的详细说明文档&#10;- 描述 migrator 自动创建 schema_migrations 的行为&#10;- 提供已有库接入的安全做法建议&#10;- 补充幂等性操作和 checksum 验证注意事项">
+      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internal/migrator/loader.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/migrator/loader.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internal/migrator/loader_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/migrator/loader_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internal/migrator/runner.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/migrator/runner.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/internal/migrator/runner_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/internal/migrator/runner_test.go" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ChangesViewManager" show_ignored="true">
+    <option name="groupingKeys">
+      <option value="directory" />
+      <option value="repository" />
+    </option>
+  </component>
+  <component name="EmbeddingIndexingInfo">
+    <option name="cachedIndexableFilesCount" value="35" />
+  </component>
+  <component name="GOROOT" url="file://$USER_HOME$/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.25.9.darwin-arm64" />
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="KubernetesApiPersistence"><![CDATA[{}]]></component>
+  <component name="KubernetesApiProvider"><![CDATA[{
+  "isMigrated": true
+}]]></component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 0
+}</component>
+  <component name="ProjectId" id="3COoBb7xVVMPJMIPK1s1FcR0Cpw" />
+  <component name="ProjectViewState">
+    <option name="autoscrollFromSource" value="true" />
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "Makefile Target.run-postgres.executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.GoLinterPluginOnboardingV2": "true",
+    "RunOnceActivity.GoLinterPluginStorageMigration": "true",
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.go.analysis.ui.options.defaults": "true",
+    "RunOnceActivity.go.formatter.settings.were.checked": "true",
+    "RunOnceActivity.go.modules.go.list.on.any.changes.was.set": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "git-widget-placeholder": "main",
+    "go.sdk.automatically.set": "true",
+    "last_opened_file_path": "/Users/onyx",
+    "node.js.detected.package.eslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "MTConfigurable"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/migrations/migrate_test" />
+    </key>
+  </component>
+  <component name="RunManager">
+    <configuration name="run-postgres" type="MAKEFILE_TARGET_RUN_CONFIGURATION" factoryName="Makefile" temporary="true">
+      <makefile filename="$PROJECT_DIR$/Makefile" target="run-postgres" workingDirectory="" arguments="">
+        <envs />
+      </makefile>
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Makefile Target.run-postgres" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="479d653e-9e51-477f-9644-90c217ce3534" name="Changes" comment="" />
+      <created>1776265842725</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1776265842725</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <option name="CHECK_CODE_SMELLS_BEFORE_PROJECT_COMMIT" value="false" />
+    <option name="CHECK_NEW_TODO" value="false" />
+    <MESSAGE value="feat(migration): 添加数据库实例支持并重构迁移工具&#10;&#10;- 添加 --db-instance 参数用于指定数据库实例名称&#10;- 修改迁移文件路径结构为 migrations/{instance}/{dialect}&#10;- 重构主函数实现为 run 函数并添加错误处理&#10;- 添加测试文件验证迁移创建功能&#10;- 更新 DM 数据库驱动依赖&#10;- 添加加载迁移测试用例&#10;- 修改 Makefile 中的数据库连接配置&#10;- 将 mustWrite 函数重命名为 writeFile 并返回错误" />
+    <MESSAGE value="feat(migrator): 添加迁移方向控制和回滚功能&#10;&#10;- 新增 MIGRATION_DIRECTION 和 MIGRATION_TARGET_VERSION 环境变量配置&#10;- 实现向下迁移（down）功能，支持回滚到指定版本&#10;- 为各数据库方言添加 RollbackMigration 方法实现&#10;- 更新 Runner 结构体以支持迁移方向和目标版本参数&#10;- 实现迁移文件加载的双向支持（up/down）&#10;- 添加目标版本验证逻辑&#10;- 更新 README 文档说明灰度迁移和回滚策略&#10;- 添加 GitToolBox 项目配置文件&#10;- 重构测试文件以验证向上和向下迁移逻辑" />
+    <MESSAGE value="drop(migrations): 删除初始数据库迁移文件&#10;&#10;- 移除 PostgreSQL 的 000001_init_schema.down.sql 文件&#10;- 移除 PostgreSQL 的 000001_init_schema.up.sql 文件&#10;- 清理相关的数据库表结构定义&#10;- 移除 schema_migrations 表的创建逻辑&#10;- 删除应用时间索引的创建语句" />
+    <MESSAGE value="docs(migrator): 更新文档并修正数据库实例名称&#10;&#10;- 修正 Makefile 中的数据库实例名称从 migrate_test 到 test&#10;- 添加首次接入已有数据库的详细说明文档&#10;- 描述 migrator 自动创建 schema_migrations 的行为&#10;- 提供已有库接入的安全做法建议&#10;- 补充幂等性操作和 checksum 验证注意事项" />
+    <option name="LAST_COMMIT_MESSAGE" value="docs(migrator): 更新文档并修正数据库实例名称&#10;&#10;- 修正 Makefile 中的数据库实例名称从 migrate_test 到 test&#10;- 添加首次接入已有数据库的详细说明文档&#10;- 描述 migrator 自动创建 schema_migrations 的行为&#10;- 提供已有库接入的安全做法建议&#10;- 补充幂等性操作和 checksum 验证注意事项" />
+  </component>
+</project>

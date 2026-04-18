@@ -14,15 +14,25 @@ type fakeDriver struct {
 	applied   map[string]string
 	appliedUp []string
 	rolled    []string
+	onEnsure  func() error
+	onApplied func() error
 }
 
 func (d *fakeDriver) Open(string) (*sql.DB, error) { return nil, nil }
 func (d *fakeDriver) Name() string                 { return "fake" }
 func (d *fakeDriver) NormalizeDialectName() string { return "fake" }
 func (d *fakeDriver) EnsureVersionTable(context.Context, *sql.DB) error {
+	if d.onEnsure != nil {
+		return d.onEnsure()
+	}
 	return nil
 }
 func (d *fakeDriver) GetAppliedMigrations(context.Context, *sql.DB) (map[string]string, error) {
+	if d.onApplied != nil {
+		if err := d.onApplied(); err != nil {
+			return nil, err
+		}
+	}
 	out := make(map[string]string, len(d.applied))
 	for version, checksum := range d.applied {
 		out[version] = checksum
@@ -91,6 +101,42 @@ func TestRunDownRollsBackAppliedVersionsAfterTargetInDescendingOrder(t *testing.
 
 	if got, want := driver.rolled, []string{"000003", "000002"}; !equalStrings(got, want) {
 		t.Fatalf("rolled back versions = %v, want %v", got, want)
+	}
+}
+
+func TestRunCreatesCurrentDialectDirectoryAfterEnsuringVersionTable(t *testing.T) {
+	rootDir := filepath.Join(t.TempDir(), "migrations", "test")
+	driver := &fakeDriver{
+		applied: map[string]string{},
+		onEnsure: func() error {
+			for _, dialect := range []string{"mysql", "postgres", "dm"} {
+				if _, err := os.Stat(filepath.Join(rootDir, dialect)); err == nil {
+					t.Fatalf("dialect dir %s exists before EnsureVersionTable returns", dialect)
+				}
+			}
+			return nil
+		},
+		onApplied: func() error {
+			if _, err := os.Stat(filepath.Join(rootDir, "postgres")); err != nil {
+				t.Fatalf("expected postgres dir to exist before reading applied migrations: %v", err)
+			}
+			for _, dialect := range []string{"mysql", "dm"} {
+				if _, err := os.Stat(filepath.Join(rootDir, dialect)); !os.IsNotExist(err) {
+					t.Fatalf("dialect dir %s exists, want only current dialect dir", dialect)
+				}
+			}
+			return nil
+		},
+	}
+
+	r := &Runner{
+		Driver:    driver,
+		RootDir:   rootDir,
+		Dialect:   "postgres",
+		Direction: DirectionUp,
+	}
+	if err := r.Run(context.Background()); err != nil {
+		t.Fatalf("Run() error = %v", err)
 	}
 }
 
