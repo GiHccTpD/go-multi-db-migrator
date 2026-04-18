@@ -11,6 +11,14 @@ import (
 )
 
 func LoadMigrations(rootDir, dialect string) ([]migcore.Migration, error) {
+	return loadMigrationFiles(rootDir, dialect, "up")
+}
+
+func LoadDownMigrations(rootDir, dialect string) ([]migcore.Migration, error) {
+	return loadMigrationFiles(rootDir, dialect, "down")
+}
+
+func loadMigrationFiles(rootDir, dialect, direction string) ([]migcore.Migration, error) {
 	dir := filepath.Join(rootDir, dialect)
 
 	entries, err := os.ReadDir(dir)
@@ -24,11 +32,11 @@ func LoadMigrations(rootDir, dialect string) ([]migcore.Migration, error) {
 			continue
 		}
 		name := e.Name()
-		if !strings.HasSuffix(name, ".up.sql") {
+		if !strings.HasSuffix(name, "."+direction+".sql") {
 			continue
 		}
 
-		version, migName, err := parseFileName(name)
+		version, migName, err := parseFileName(name, direction)
 		if err != nil {
 			return nil, fmt.Errorf("parse file %s failed: %w", name, err)
 		}
@@ -55,12 +63,13 @@ func LoadMigrations(rootDir, dialect string) ([]migcore.Migration, error) {
 	return out, nil
 }
 
-func parseFileName(file string) (version, name string, err error) {
-	if !strings.HasSuffix(file, ".up.sql") {
-		return "", "", fmt.Errorf("not an up migration file: %s", file)
+func parseFileName(file, direction string) (version, name string, err error) {
+	suffix := "." + direction + ".sql"
+	if !strings.HasSuffix(file, suffix) {
+		return "", "", fmt.Errorf("not a %s migration file: %s", direction, file)
 	}
 
-	base := strings.TrimSuffix(file, ".up.sql")
+	base := strings.TrimSuffix(file, suffix)
 	idx := strings.Index(base, "_")
 	if idx <= 0 || idx == len(base)-1 {
 		return "", "", fmt.Errorf("invalid migration filename: %s", file)

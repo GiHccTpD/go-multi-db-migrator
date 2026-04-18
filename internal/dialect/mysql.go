@@ -71,6 +71,26 @@ VALUES (?, ?, ?, ?, ?, ?)
 	return nil
 }
 
+func (d MySQLDriver) RollbackMigration(ctx context.Context, db *sql.DB, m migcore.Migration, logSQL bool) error {
+	if _, err := db.ExecContext(ctx, m.SQL); err != nil {
+		return fmt.Errorf("exec rollback %s failed: %w", m.FileName, err)
+	}
+
+	res, err := db.ExecContext(ctx, `DELETE FROM schema_migrations WHERE version = ?`, m.Version)
+	if err != nil {
+		return fmt.Errorf("delete migration record failed: %w", err)
+	}
+	affected, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("delete migration record rows affected failed: %w", err)
+	}
+	if affected != 1 {
+		return fmt.Errorf("delete migration record affected %d rows, want 1", affected)
+	}
+
+	return nil
+}
+
 func (d MySQLDriver) AcquireLock(ctx context.Context, db *sql.DB, lockKey string) (func() error, error) {
 	var got sql.NullInt64
 	if err := db.QueryRowContext(ctx, `SELECT GET_LOCK(?, 0)`, lockKey).Scan(&got); err != nil {

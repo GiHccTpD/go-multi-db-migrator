@@ -13,6 +13,8 @@ type Config struct {
 	DSN            string
 	MigrationsDir  string
 	DBInstanceName string
+	Direction      string
+	TargetVersion  string
 	LogSQL         bool
 }
 
@@ -22,6 +24,8 @@ func Load() (*Config, error) {
 		DSN:            getenv("DB_DSN", ""),
 		MigrationsDir:  getenv("MIGRATIONS_DIR", "/app/migrations"),
 		DBInstanceName: getenv("DB_INSTANCE_NAME", ""),
+		Direction:      strings.ToLower(getenv("MIGRATION_DIRECTION", "up")),
+		TargetVersion:  getenv("MIGRATION_TARGET_VERSION", ""),
 		LogSQL:         strings.ToLower(getenv("LOG_SQL", "false")) == "true",
 	}
 
@@ -30,6 +34,9 @@ func Load() (*Config, error) {
 	}
 	if cfg.DSN == "" {
 		return nil, fmt.Errorf("DB_DSN is required")
+	}
+	if cfg.Direction != "up" && cfg.Direction != "down" {
+		return nil, fmt.Errorf("unsupported MIGRATION_DIRECTION: %s", cfg.Direction)
 	}
 
 	if cfg.DBInstanceName == "" {

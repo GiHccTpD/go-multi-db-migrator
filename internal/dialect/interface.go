@@ -15,4 +15,5 @@ type Driver interface {
 	EnsureVersionTable(ctx context.Context, db *sql.DB) error
 	GetAppliedMigrations(ctx context.Context, db *sql.DB) (map[string]string, error)
 	ApplyMigration(ctx context.Context, db *sql.DB, m migcore.Migration, logSQL bool) error
+	RollbackMigration(ctx context.Context, db *sql.DB, m migcore.Migration, logSQL bool) error
 }

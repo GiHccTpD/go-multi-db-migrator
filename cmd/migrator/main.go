@@ -37,11 +37,14 @@ func main() {
 	rootDir := filepath.Join(cfg.MigrationsDir, cfg.DBInstanceName)
 
 	r := &migrator.Runner{
-		DB:      db,
-		Driver:  driver,
-		LogSQL:  cfg.LogSQL,
-		RootDir: rootDir,
-		Dialect: normalizeDialect(cfg.Dialect),
+		DB:             db,
+		Driver:         driver,
+		LogSQL:         cfg.LogSQL,
+		RootDir:        rootDir,
+		Dialect:        normalizeDialect(cfg.Dialect),
+		DBInstanceName: cfg.DBInstanceName,
+		Direction:      migrator.Direction(cfg.Direction),
+		TargetVersion:  cfg.TargetVersion,
 	}
 
 	if err := r.Run(ctx); err != nil {

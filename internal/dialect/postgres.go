@@ -78,6 +78,32 @@ VALUES ($1, $2, $3, $4, $5, $6)
 	return tx.Commit()
 }
 
+func (d PostgresDriver) RollbackMigration(ctx context.Context, db *sql.DB, m migcore.Migration, logSQL bool) error {
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	if _, err := tx.ExecContext(ctx, m.SQL); err != nil {
+		return fmt.Errorf("exec rollback %s failed: %w", m.FileName, err)
+	}
+
+	res, err := tx.ExecContext(ctx, `DELETE FROM schema_migrations WHERE version = $1`, m.Version)
+	if err != nil {
+		return fmt.Errorf("delete migration record failed: %w", err)
+	}
+	affected, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("delete migration record rows affected failed: %w", err)
+	}
+	if affected != 1 {
+		return fmt.Errorf("delete migration record affected %d rows, want 1", affected)
+	}
+
+	return tx.Commit()
+}
+
 func (d PostgresDriver) AcquireLock(ctx context.Context, db *sql.DB, lockKey string) (func() error, error) {
 	lockID := hashToInt64(lockKey)
 
